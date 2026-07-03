@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <Siv3D.hpp>
 #include "Board.hpp"
+#include "Player.hpp"
 
 // Game state
 enum class GameState
@@ -30,6 +31,8 @@ class Game
         Camera2D mCamera;
         // The game board
         Board mBoard;
+		// The player
+		Player mPlayer;
         // Input state
         bool mLeftClicked;
         bool mRightClicked;

@@ -8,21 +8,29 @@ class Board
     public:
         Board();
 
-        void Update(Vec2 clickPos, bool leftClicked, bool rightClicked);
         void Draw() const;
 		void Reset();
 
-        // Create the board with the given size and mine count
-        void CreateBoard(const Size& size, int32 mineCount);
+		bool IsValidGridPos(const Point& gridPos) const;
+		bool IsOpenedGridPos(const Point& gridPos) const;
+		bool CanOpen(const Point& targetGridPos, const Point& playerPos) const;
+		void ToggleFlag(const Point& gridPos);
+
+		// Create the board with the given size and mine count
+        void CreateBoard(const Size& size, int32 mineCount, Point start, Point key, Point goal);
         // Get the mine count of the cell at the given position
         int32 GetMineCount(const Point& pos);
-        // Get the cell index from the given position
-        Point GetIndexFromPos(const Vec2& pos);
-        // Open the cell at the given position
-        void OpenCell(const Point& pos);
+        // Get the cell grid position from the given screen position
+        Point GetGridPosFromScreenPos(const Vec2& screenPos);
+		// Get the screen position from the given cell grid position
+		Point GetScreenPosFromGridPos(const Point& gridPos) const;
+        // Open the cell at the given cell grid position
+        void OpenCell(const Point& gridPos);
 		// Check if there is a path from start to goal using BFS
 		bool CheckPathBFS(const Point& start, const Point& goal);
 		bool IsSafeZone(const Point& pos, const Point& start, const Point& key, const Point& goal);
+		// Find a path from start to goal 4-directionally using BFS
+		Array<Point> FindPathBFS(const Point& start, const Point& goal) const;
         // Check if the game is cleared or over
         bool IsCleared() const { return mSafeCellCount == 0; }
         bool IsGameOver() const { return mIsGameOver; }
@@ -46,7 +54,7 @@ class Board
         // Whether the game is over
         bool mIsGameOver;
 		// The start, key and goal positions
-		const Point mStartPos{0, 3};
-		const Point mKeyPos{7, 12};
-		const Point mGoalPos{23, 9};
+		Point mStartGridPos;
+		Point mKeyGridPos;
+		Point mGoalGridPos;
 };

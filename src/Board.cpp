@@ -3,28 +3,10 @@
 Board::Board()
 : mSafeCellCount(0)
 , mIsGameOver(false)
+, mStartGridPos(0, 0)
+, mKeyGridPos(0, 0)
+, mGoalGridPos(0, 0)
 {
-}
-
-void Board::Update(Vec2 clickPos, bool leftClicked, bool rightClicked)
-{
-    // Get the cell index from the click position
-    Point pos = GetIndexFromPos(clickPos);
-    if (pos.x < 0 || pos.x >= mCells.width() ||
-        pos.y < 0 || pos.y >= mCells.height())
-    {
-        return;
-    }
-
-    // Open the cell on left click, flag the cell on right click
-    if (leftClicked && !mCells[pos].GetIsOpened() && !mCells[pos].GetIsFlagged())
-    {
-        OpenCell(pos);
-    }
-    if (rightClicked)
-    {
-        mCells[pos].SetIsFlagged(!mCells[pos].GetIsFlagged());
-    }
 }
 
 void Board::Draw() const
@@ -34,8 +16,8 @@ void Board::Draw() const
     {
         for (int32 x = 0; x < size.x; ++x)
         {
-            const Point pos = {25 + 50 * x - (50 * size.x) / 2, 25 + 50 * y - (50 * size.y) / 2};
-            mCells[Point{x, y}].Draw(pos);
+			Point screenPos = GetScreenPosFromGridPos(Point{x, y});
+            mCells[Point{x, y}].Draw(screenPos);
         }
     }
 }
@@ -48,8 +30,50 @@ void Board::Reset()
 	mIsGameOver = false;
 }
 
-void Board::CreateBoard(const Size& size, int32 mineCount)
+bool Board::IsValidGridPos(const Point& gridPos) const
 {
+	return (gridPos.x >= 0 && gridPos.x < mCells.width() &&
+			gridPos.y >= 0 && gridPos.y < mCells.height());
+}
+
+bool Board::IsOpenedGridPos(const Point& gridPos) const
+{
+	return mCells[gridPos].GetIsOpened();
+}
+
+bool Board::CanOpen(const Point& targetGridPos, const Point& playerPos) const
+{
+	if (!IsValidGridPos(targetGridPos) || IsOpenedGridPos(targetGridPos) || mCells[targetGridPos].GetIsFlagged())
+	{
+		return false;
+	}
+
+	for (const auto& offset : mOffsets)
+	{
+		const Point neighborPos = targetGridPos + offset;
+		if (IsValidGridPos(neighborPos) && IsOpenedGridPos(neighborPos))
+		{
+			if (neighborPos == playerPos) return true;
+			if (!FindPathBFS(playerPos, neighborPos).empty()) return true;
+		}
+	}
+
+	return false;
+}
+
+void Board::ToggleFlag(const Point& gridPos)
+{
+    if (!mCells[gridPos].GetIsOpened())
+	{
+        mCells[gridPos].SetIsFlagged(!mCells[gridPos].GetIsFlagged());
+    }
+}
+
+void Board::CreateBoard(const Size& size, int32 mineCount, Point start, Point key, Point goal)
+{
+	mStartGridPos = start;
+	mKeyGridPos = key;
+	mGoalGridPos = goal;
 
 	while (true)
 	{
@@ -57,22 +81,27 @@ void Board::CreateBoard(const Size& size, int32 mineCount)
 		mMines.clear();
 		// avoid reallocation
 		mMines.reserve(mineCount);
+
+		mCells[mStartGridPos].SetRole(CellRole::Start);
+		mCells[mKeyGridPos].SetRole(CellRole::Key);
+		mCells[mGoalGridPos].SetRole(CellRole::Goal);
+
 		int32 currentMineCount = mineCount;
 
 		// Randomly place mines
 		while (currentMineCount > 0)
 		{
-		    const Point pos = {Random(0, size.x - 1), Random(0, size.y - 1)};
+		    const Point gridPos = {Random(0, size.x - 1), Random(0, size.y - 1)};
 
-		    if (mCells[pos].GetMineCount() == 0 && !IsSafeZone(pos, mStartPos, mKeyPos, mGoalPos))
+		    if (mCells[gridPos].GetMineCount() == 0 && !IsSafeZone(gridPos, mStartGridPos, mKeyGridPos, mGoalGridPos))
 		    {
-		        mCells[pos].SetMineCount(-1);
-				mMines.push_back(pos);
+		        mCells[gridPos].SetMineCount(-1);
+				mMines.push_back(gridPos);
 		        --currentMineCount;
 		    }
 		}
 
-		if (CheckPathBFS(mStartPos, mKeyPos) && CheckPathBFS(mKeyPos, mGoalPos))
+		if (CheckPathBFS(mStartGridPos, mKeyGridPos) && CheckPathBFS(mKeyGridPos, mGoalGridPos))
 		{
 			break;
 		}
@@ -89,12 +118,17 @@ void Board::CreateBoard(const Size& size, int32 mineCount)
     }
 
 	mSafeCellCount = size.x * size.y - mineCount;
+
+	mCells[mStartGridPos].SetIsOpened(true);
+	mCells[mKeyGridPos].SetIsOpened(true);
+	mCells[mGoalGridPos].SetIsOpened(true);
+	mSafeCellCount -= 3;
 }
 
-int32 Board::GetMineCount(const Point& pos)
+int32 Board::GetMineCount(const Point& gridPos)
 {
     // If this cell is a mine, return -1
-    if (mCells[pos].GetMineCount() == -1)
+    if (mCells[gridPos].GetMineCount() == -1)
     {
         return -1;
     }
@@ -103,7 +137,7 @@ int32 Board::GetMineCount(const Point& pos)
     // Check all 8 neighbors
     for (const auto& offset : mOffsets)
     {
-        const Point neighborPos = pos + offset;
+        const Point neighborPos = gridPos + offset;
         if (neighborPos.x < 0 || neighborPos.x >= mCells.width() ||
             neighborPos.y < 0 || neighborPos.y >= mCells.height())
         {
@@ -117,43 +151,49 @@ int32 Board::GetMineCount(const Point& pos)
     return mineCount;
 }
 
-Point Board::GetIndexFromPos(const Vec2& pos)
+Point Board::GetGridPosFromScreenPos(const Vec2& screenPos)
 {
     Point idx;
-    idx.x = static_cast<int>(Math::Floor((pos.x + (50 * mCells.width()) / 2.0) / 50.0));
-    idx.y = static_cast<int>(Math::Floor((pos.y + (50 * mCells.height()) / 2.0) / 50.0));
+    idx.x = static_cast<int>(Math::Floor((screenPos.x + (50 * mCells.width()) / 2.0) / 50.0));
+    idx.y = static_cast<int>(Math::Floor((screenPos.y + (50 * mCells.height()) / 2.0) / 50.0));
     return idx;
 }
 
-void Board::OpenCell(const Point& pos)
+Point Board::GetScreenPosFromGridPos(const Point& gridPos) const
+{
+    const Size size = mCells.size();
+    return Point{25 + 50 * gridPos.x - (50 * size.x) / 2, 25 + 50 * gridPos.y - (50 * size.y) / 2};
+}
+
+void Board::OpenCell(const Point& gridPos)
 {
 	// If the position is out of bounds, or the cell is already opened or flagged, do nothing
-    if (pos.x < 0 || pos.x >= mCells.width() ||
-        pos.y < 0 || pos.y >= mCells.height() ||
-        mCells[pos].GetIsOpened() ||
-        mCells[pos].GetIsFlagged())
+    if (gridPos.x < 0 || gridPos.x >= mCells.width() ||
+        gridPos.y < 0 || gridPos.y >= mCells.height() ||
+        mCells[gridPos].GetIsOpened() ||
+        mCells[gridPos].GetIsFlagged())
     {
         return;
     }
-    mCells[pos].SetIsOpened(true);
+    mCells[gridPos].SetIsOpened(true);
     --mSafeCellCount;
 
 	// If this cell has no mines around, open all its neighbors recursively
 	// If this cell is a mine, set it as exploded and open all mines, then end the game
-    if (mCells[pos].GetMineCount() == 0)
+    if (mCells[gridPos].GetMineCount() == 0)
     {
         for (const auto& offset : mOffsets)
         {
-            const Point neighborPos = pos + offset;
+            const Point neighborPos = gridPos + offset;
             OpenCell(neighborPos);
         }
     }
-    else if (mCells[pos].GetMineCount() == -1)
+    else if (mCells[gridPos].GetMineCount() == -1)
     {
-		mCells[pos].SetIsExploded(true);
+		mCells[gridPos].SetIsExploded(true);
 		for (const auto& minePos : mMines)
 		{
-			if (minePos != pos)
+			if (minePos != gridPos)
 			{
 				mCells[minePos].SetIsOpened(true);
 			}
@@ -174,16 +214,16 @@ bool Board::CheckPathBFS(const Point& start, const Point& goal)
 
 	while (!que.empty())
 	{
-		Point pos = que.front();
+		Point gridPos = que.front();
 		que.pop();
-		if (pos == goal)
+		if (gridPos == goal)
 		{
 			return true;
 		}
 
 		for (const auto& dir : mDirections)
 		{
-			const Point neighborPos = pos + dir;
+			const Point neighborPos = gridPos + dir;
 			if (neighborPos.x < 0 || neighborPos.x >= mCells.width() ||
 			    neighborPos.y < 0 || neighborPos.y >= mCells.height())
 			{
@@ -201,12 +241,60 @@ bool Board::CheckPathBFS(const Point& start, const Point& goal)
 	return result;
 }
 
-bool Board::IsSafeZone(const Point& pos, const Point& start, const Point& key, const Point& goal)
+bool Board::IsSafeZone(const Point& gridPos, const Point& start, const Point& key, const Point& goal)
 {
-	if (Abs(pos.x - start.x) <= 1 && Abs(pos.y - start.y) <= 1) return true;
-	if (Abs(pos.x - key.x) <= 1 && Abs(pos.y - key.y) <= 1) return true;
-	if (Abs(pos.x - goal.x) <= 1 && Abs(pos.y - goal.y) <= 1) return true;
+	if (Abs(gridPos.x - start.x) <= 1 && Abs(gridPos.y - start.y) <= 1) return true;
+	if (Abs(gridPos.x - key.x) <= 1 && Abs(gridPos.y - key.y) <= 1) return true;
+	if (Abs(gridPos.x - goal.x) <= 1 && Abs(gridPos.y - goal.y) <= 1) return true;
 	return false;
+}
+
+Array<Point> Board::FindPathBFS(const Point& start, const Point& goal) const
+{
+	Array<Point> path;
+	if (start == goal) return path;
+	if (!IsValidGridPos(start) || !IsValidGridPos(goal)) return path;
+	if (!IsOpenedGridPos(start) || !IsOpenedGridPos(goal)) return path;
+
+	Grid<Point> parent(mCells.size(), Point{-1, -1});
+	std::queue<Point> que;
+	que.push(start);
+	parent[start] = start;
+
+	bool found = false;
+	while (!que.empty())
+	{
+		Point gridPos = que.front();
+		que.pop();
+
+		if (gridPos == goal)
+		{
+			found = true;
+			break;
+		}
+
+		for (const auto& dir : mDirections)
+		{
+			Point nextPos = gridPos + dir;
+			if (IsValidGridPos(nextPos) && IsOpenedGridPos(nextPos) && parent[nextPos] == Point{-1, -1})
+			{
+				parent[nextPos] = gridPos;
+				que.push(nextPos);
+			}
+		}
+	}
+
+	if (found)
+	{
+		Point current = goal;
+		while (current != start)
+		{
+			path.push_front(current);
+			current = parent[current];
+		}
+	}
+
+	return path;
 }
 
 

@@ -5,6 +5,7 @@ Cell::Cell()
 , mIsOpened(false)
 , mIsFlagged(false)
 , mIsExploded(false)
+, mRole(CellRole::Normal)
 {
 }
 
@@ -13,6 +14,7 @@ void Cell::Draw(const Point& pos) const
     if (mIsOpened)
     {
         Rect{Arg::center(pos), 50, 50}.drawFrame(1, Palette::Black).draw(Palette::Gray);
+		// Draw the mine count or mine texture
         if (mMineCount > 0)
         {
             HSV color = {220.0 / mMineCount, 1.0, 1.0 - mMineCount / 9};
@@ -35,6 +37,15 @@ void Cell::Draw(const Point& pos) const
             TextureAsset(U"Flag").scaled(0.3).drawAt(pos);
         }
     }
+
+	if (mRole == CellRole::Key)
+	{
+		TextureAsset(U"Key").scaled(0.3).drawAt(pos);
+	}
+	else if (mRole == CellRole::Goal)
+	{
+		TextureAsset(U"Goal").scaled(0.3).drawAt(pos);
+	}
 }
 
 void Cell::Reset()

@@ -4,6 +4,7 @@ Game::Game()
 : mState(GameState::isPlaying)
 , mCamera(Vec2{0, 0}, 1.0, CameraControl::None_)
 , mBoard()
+, mPlayer(Point{0, 0})
 , mLeftClicked(false)
 , mRightClicked(false)
 , mKeyCIsPressed(false)
@@ -66,8 +67,32 @@ void Game::ProcessInput()
 
 void Game::UpdateGame()
 {
-    // Update the board
-    mBoard.Update(mClickPos, mLeftClicked, mRightClicked);
+	if (mLeftClicked || mRightClicked)
+	{
+		// Get the cell index from the click position
+		Point targetGridPos = mBoard.GetGridPosFromScreenPos(mClickPos);
+
+		if (mBoard.IsValidGridPos(targetGridPos))
+		{
+			if (mLeftClicked)
+			{
+				if (mBoard.CanOpen(targetGridPos, mPlayer.GetGridPos()))
+				{
+					mBoard.OpenCell(targetGridPos);
+				}
+				else if (mBoard.IsOpenedGridPos(targetGridPos))
+				{
+					Array<Point> path = mBoard.FindPathBFS(mPlayer.GetGridPos(), targetGridPos);
+
+					if (!path.empty()) mPlayer.SetGridPos(targetGridPos);
+				}
+			}
+			else if (mRightClicked)
+			{
+				mBoard.ToggleFlag(targetGridPos);
+			}
+		}
+	}
 
     // Check for game over or clear
     if (mBoard.IsGameOver())
@@ -85,7 +110,8 @@ void Game::UpdateGame()
 		if (mKeyCIsPressed)
 		{
 			mBoard.Reset();
-			mBoard.CreateBoard({ 24, 16 }, 80);
+			mBoard.CreateBoard({24, 16}, 80, Point{0, 3}, Point{7, 12}, Point{23, 9});
+			mPlayer = Player(Point{0, 3});
 			mState = GameState::isPlaying;
 			mKeyCIsPressed = false;
 		}
@@ -106,6 +132,10 @@ void Game::GenerateOutput()
 
     // Draw game elements
     mBoard.Draw();
+
+	// Draw player
+	Point playerScreenPos = mBoard.GetScreenPosFromGridPos(mPlayer.GetGridPos());
+	mPlayer.Draw(playerScreenPos);
 
 	// Draw game over or clear message
 	if (mState == GameState::isGameOver)
@@ -136,9 +166,15 @@ void Game::LoadData()
     // Register texture
     TextureAsset::Register(U"Mine", U"💣"_emoji);
     TextureAsset::Register(U"Flag", U"🚩"_emoji);
+	TextureAsset::Register(U"Cat", U"🐱"_emoji);	
+	TextureAsset::Register(U"Key", U"🗝️"_emoji);	
+	TextureAsset::Register(U"Goal", U"🏳️"_emoji);	
 
     // Create a board
-	mBoard.CreateBoard({24, 16}, 80);
+	mBoard.CreateBoard({24, 16}, 80, Point{0, 3}, Point{7, 12}, Point{23, 9});
+
+	// Create a player
+	mPlayer = Player(Point{0, 3});
 }
 
 void Game::Shutdown()
