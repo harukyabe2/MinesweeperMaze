@@ -47,16 +47,12 @@ void Game::ProcessInput()
 
 		// Check for left mouse click
 		mLeftClicked = MouseL.down();
-		if (mLeftClicked)
-		{
-		    mClickPos = Cursor::PosF();
-		}
+		if (mLeftClicked) mClickPos = Cursor::PosF();
+		
 		// Check for right mouse click
 		mRightClicked = MouseR.down();
-		if (mRightClicked)
-		{
-		    mClickPos = Cursor::PosF();
-		}
+		if (mRightClicked) mClickPos = Cursor::PosF();
+		
     }
 	else if (mState != GameState::isPlaying)
 	{
@@ -76,14 +72,19 @@ void Game::UpdateGame()
 		{
 			if (mLeftClicked)
 			{
-				if (mBoard.CanOpen(targetGridPos, mPlayer.GetGridPos()))
+				Point playerPos = mPlayer.GetGridPos();
+
+				// If the target cell can be opened, open it and move the player to the closest reachable position
+				if (mBoard.CanOpen(targetGridPos, playerPos))
 				{
 					mBoard.OpenCell(targetGridPos);
+
+					Point closestPos = mBoard.GetClosestReachableGridPos(playerPos, targetGridPos);
+					mPlayer.SetGridPos(closestPos);
 				}
 				else if (mBoard.IsOpenedGridPos(targetGridPos))
 				{
-					Array<Point> path = mBoard.FindPathBFS(mPlayer.GetGridPos(), targetGridPos);
-
+					Array<Point> path = mBoard.FindPathBFS(playerPos, targetGridPos);
 					if (!path.empty()) mPlayer.SetGridPos(targetGridPos);
 				}
 			}

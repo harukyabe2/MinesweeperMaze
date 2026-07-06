@@ -69,11 +69,45 @@ void Board::ToggleFlag(const Point& gridPos)
     }
 }
 
-void Board::CreateBoard(const Size& size, int32 mineCount, Point start, Point key, Point goal)
+Point Board::GetClosestReachableGridPos(const Point& start, const Point& target) const
 {
-	mStartGridPos = start;
-	mKeyGridPos = key;
-	mGoalGridPos = goal;
+	if (IsOpenedGridPos(target) && (start == target || !FindPathBFS(start, target).empty())) return target;
+
+	Point closestPos = start;
+	size_t minPathLength = 999999;
+
+	for (const auto& offset : mOffsets)
+	{
+		const Point neighborPos = target + offset;
+		if (IsValidGridPos(neighborPos) && IsOpenedGridPos(neighborPos))
+		{
+			if (neighborPos == start)
+			{
+				if (0 < minPathLength)
+				{
+					minPathLength = 0;
+					closestPos = start;
+				}
+				continue;
+			}
+
+			Array<Point> path = FindPathBFS(start, neighborPos);
+			if (!path.empty() && path.size() < minPathLength)
+			{
+				minPathLength = path.size();
+				closestPos = neighborPos;
+			}
+		}
+	}
+
+	return closestPos;
+}
+
+void Board::CreateBoard(const Size& size, int32 mineCount, const Point& startGridPos, const Point& keyGridPos, const Point& goalGridPos)
+{
+	mStartGridPos = startGridPos;
+	mKeyGridPos = keyGridPos;
+	mGoalGridPos = goalGridPos;
 
 	while (true)
 	{
@@ -241,11 +275,11 @@ bool Board::CheckPathBFS(const Point& start, const Point& goal)
 	return result;
 }
 
-bool Board::IsSafeZone(const Point& gridPos, const Point& start, const Point& key, const Point& goal)
+bool Board::IsSafeZone(const Point& gridPos, const Point& startGridPos, const Point& keyGridPos, const Point& goalGridPos)
 {
-	if (Abs(gridPos.x - start.x) <= 1 && Abs(gridPos.y - start.y) <= 1) return true;
-	if (Abs(gridPos.x - key.x) <= 1 && Abs(gridPos.y - key.y) <= 1) return true;
-	if (Abs(gridPos.x - goal.x) <= 1 && Abs(gridPos.y - goal.y) <= 1) return true;
+	if (Abs(gridPos.x - startGridPos.x) <= 1 && Abs(gridPos.y - startGridPos.y) <= 1) return true;
+	if (Abs(gridPos.x - keyGridPos.x) <= 1 && Abs(gridPos.y - keyGridPos.y) <= 1) return true;
+	if (Abs(gridPos.x - goalGridPos.x) <= 1 && Abs(gridPos.y - goalGridPos.y) <= 1) return true;
 	return false;
 }
 

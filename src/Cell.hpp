@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include <Siv3D.hpp>
 
-// CellRole enum represents the role of a cell
 enum class CellRole
 {
 	Normal,
@@ -10,13 +9,12 @@ enum class CellRole
 	Goal
 };
 
-// Cell class represents a single cell
 class Cell
 {
     public:
         Cell();
 
-        void Draw(const Point& pos) const;
+        void Draw(const Point& screenPos) const;
 		void Reset();
 
         // Getters and setters
@@ -29,16 +27,14 @@ class Cell
         void SetIsExploded(const bool isExploded) { mIsExploded = isExploded; }
 		CellRole GetRole() const { return mRole;  }
 		void SetRole(const CellRole role) { mRole = role; }
+
     private:
         // The number of mines around this cell
 		// If this cell is a mine, number is -1
         int32 mMineCount;
-        // Whether this cell is opened
+
         bool mIsOpened;
-        // Whether this cell is flagged
         bool mIsFlagged;
-		// Whether mine is exploded
 		bool mIsExploded;
-		// The role of this cell
 		CellRole mRole;
 };

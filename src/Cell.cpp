@@ -9,43 +9,48 @@ Cell::Cell()
 {
 }
 
-void Cell::Draw(const Point& pos) const
+void Cell::Draw(const Point& screenPos) const
 {
     if (mIsOpened)
     {
-        Rect{Arg::center(pos), 50, 50}.drawFrame(1, Palette::Black).draw(Palette::Gray);
-		// Draw the mine count or mine texture
+        Rect{Arg::center(screenPos), 50, 50}.drawFrame(1, Palette::Black).draw(Palette::Gray);
+
         if (mMineCount > 0)
         {
             HSV color = {220.0 / mMineCount, 1.0, 1.0 - mMineCount / 9};
-            FontAsset(U"Number")(U"{}"_fmt(mMineCount)).drawAt(40, pos, color);
+            FontAsset(U"Number")(U"{}"_fmt(mMineCount)).drawAt(40, screenPos, color);
         }
         else if (mMineCount == -1)
         {
 			if (mIsExploded)
 			{
-				Rect{Arg::center(pos), 50, 50}.drawFrame(1, Palette::Black).draw(Palette::Red);
+				Rect{Arg::center(screenPos), 50, 50}.drawFrame(1, Palette::Black).draw(Palette::Red);
 			}
-            TextureAsset(U"Mine").scaled(0.3).drawAt(pos);
+            TextureAsset(U"Mine").scaled(0.3).drawAt(screenPos);
         }
-    }
-    else if (!mIsOpened)
+
+		if (mRole == CellRole::Start)
+		{
+		    Rect{Arg::center(screenPos), 50, 50}.drawFrame(1, Palette::Black).draw(Palette::Whitesmoke);
+		}
+		else if (mRole == CellRole::Key)
+		{
+			TextureAsset(U"Key").scaled(0.3).drawAt(screenPos);
+		}
+		else if (mRole == CellRole::Goal)
+		{
+			TextureAsset(U"Goal").scaled(0.3).drawAt(screenPos);
+		}
+	}
+    else
     {
-        Rect{Arg::center(pos), 50, 50}.drawFrame(1, Palette::Black).draw(Palette::Darkgray);
+        Rect{Arg::center(screenPos), 50, 50}.drawFrame(1, Palette::Black).draw(Palette::Darkgray);
         if (mIsFlagged)
         {
-            TextureAsset(U"Flag").scaled(0.3).drawAt(pos);
+            TextureAsset(U"Flag").scaled(0.3).drawAt(screenPos);
         }
     }
 
-	if (mRole == CellRole::Key)
-	{
-		TextureAsset(U"Key").scaled(0.3).drawAt(pos);
-	}
-	else if (mRole == CellRole::Goal)
-	{
-		TextureAsset(U"Goal").scaled(0.3).drawAt(pos);
-	}
 }
 
 void Cell::Reset()
@@ -54,4 +59,5 @@ void Cell::Reset()
 	mIsOpened = false;
 	mIsFlagged = false;
 	mIsExploded = false;
+	mRole = CellRole::Normal;
 }
