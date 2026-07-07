@@ -1,9 +1,7 @@
 ﻿#include "Board.hpp"
 
 Board::Board()
-: mSafeCellCount(0)
-, mIsGameOver(false)
-, mStartGridPos(0, 0)
+: mStartGridPos(0, 0)
 , mKeyGridPos(0, 0)
 , mGoalGridPos(0, 0)
 {
@@ -26,8 +24,6 @@ void Board::Reset()
 {
 	mCells.clear();
 	mMines.clear();
-	mSafeCellCount = 0;
-	mIsGameOver = false;
 }
 
 bool Board::IsValidGridPos(const Point& gridPos) const
@@ -152,12 +148,9 @@ void Board::CreateBoard(const Size& size, int32 mineCount, const Point& startGri
         }
     }
 
-	mSafeCellCount = size.x * size.y - mineCount;
-
 	mCells[mStartGridPos].SetIsOpened(true);
 	mCells[mKeyGridPos].SetIsOpened(true);
 	mCells[mGoalGridPos].SetIsOpened(true);
-	mSafeCellCount -= 3;
 }
 
 int32 Board::GetMineCount(const Point& gridPos)
@@ -190,17 +183,28 @@ Point Board::GetScreenPosFromGridPos(const Point& gridPos) const
     return Point{25 + 50 * gridPos.x - (50 * size.x) / 2, 25 + 50 * gridPos.y - (50 * size.y) / 2};
 }
 
-void Board::OpenCell(const Point& gridPos)
+Vec2 Board::GetScreenPosFromGridPos(const Vec2& gridPos) const
+{
+    const Size size = mCells.size();
+    return Vec2{25 + 50 * gridPos.x - (50 * size.x) / 2, 25 + 50 * gridPos.y - (50 * size.y) / 2};
+}
+
+bool Board::OpenCell(const Point& gridPos)
 {
     if (!IsValidGridPos(gridPos) ||
-        mCells[gridPos].GetIsOpened() ||
+        IsOpenedGridPos(gridPos) ||
         mCells[gridPos].GetIsFlagged())
     {
-        return;
+        return false;
     }
 
     mCells[gridPos].SetIsOpened(true);
-    --mSafeCellCount;
+
+    if (mCells[gridPos].GetMineCount() == -1)
+    {
+		mCells[gridPos].SetIsExploded(true);
+		return true;
+    }
 
 	// 周囲8マスに地雷がない場合は、再帰的に周囲8マスを開く
 	if (mCells[gridPos].GetMineCount() == 0)
@@ -211,18 +215,13 @@ void Board::OpenCell(const Point& gridPos)
             OpenCell(neighborPos);
         }
     }
-    else if (mCells[gridPos].GetMineCount() == -1)
-    {
-		mCells[gridPos].SetIsExploded(true);
-		for (const auto& minePos : mMines)
-		{
-			if (minePos != gridPos)
-			{
-				mCells[minePos].SetIsOpened(true);
-			}
-		}
-        mIsGameOver = true;
-    }
+
+	return false;
+}
+
+void Board::RemoveKey()
+{
+	mCells[mKeyGridPos].SetRole(CellRole::Normal);
 }
 
 bool Board::CheckPathBFS(const Point& startGridPos, const Point& goalGridPos)

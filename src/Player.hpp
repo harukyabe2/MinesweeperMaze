@@ -7,12 +7,20 @@ class Player
 		Player(const Point& startGridPos);
 
 		void Update();
-		void Draw(const Point& screenPos) const;
+		void Draw(const Vec2& screenPos) const;
+
+		void SetPath(const Array<Point>& path);
+		Vec2 GetDoubleGridPos() const { return mDoubleGridPos; }
 
 		Point GetGridPos() const { return mGridPos; }
 		void SetGridPos(const Point& gridPos) { mGridPos = gridPos;  }
 
 	private:
 		Point mGridPos;
-		bool mHasKey;
+		Vec2 mDoubleGridPos;
+
+		bool mIsMoving;
+
+		Array<Point> mPath;
+		size_t mCurrentPathIndex;
 };

@@ -30,8 +30,10 @@ class Board
 		// スクリーン座標とマス目の相互変換
         Point GetGridPosFromScreenPos(const Vec2& screenPos);
 		Point GetScreenPosFromGridPos(const Point& gridPos) const;
+		Vec2 GetScreenPosFromGridPos(const Vec2& gridPos) const;
 
-        void OpenCell(const Point& gridPos);
+        bool OpenCell(const Point& gridPos);
+		void RemoveKey();
 
 		// BFSを用いて、ゴールまでの経路が存在するか判定
 		bool CheckPathBFS(const Point& startGridPos, const Point& goalGridPos);
@@ -41,15 +43,12 @@ class Board
 		// スタート、キー、ゴールの周囲8マスには地雷を配置しないようにするための判定
 		bool IsSafeZone(const Point& gridPos, const Point& startGridPos, const Point& keyGridPos, const Point& goalGridPos);
 
-        bool IsCleared() const { return mSafeCellCount == 0; }
-        bool IsGameOver() const { return mIsGameOver; }
+		Point GetKeyGridPos() const { return mKeyGridPos; }
+		Point GetGoalGridPos() const { return mGoalGridPos; }
 
     private:
         Grid<Cell> mCells;
 		Array<Point> mMines;
-
-        int32 mSafeCellCount;
-        bool mIsGameOver;
 
 		Point mStartGridPos;
 		Point mKeyGridPos;

@@ -5,6 +5,8 @@ Game::Game()
 , mCamera(Vec2{0, 0}, 1.0, CameraControl::None_)
 , mBoard()
 , mPlayer(Point{0, 0})
+, mLife(3)
+, mHasKey(false)
 , mLeftClicked(false)
 , mRightClicked(false)
 , mKeyCIsPressed(false)
@@ -16,7 +18,7 @@ Game::Game()
 
 bool Game::Initialize()
 {
-	Scene::Resize(1280, 900);
+	Scene::Resize(1500, 900);
 	Scene::SetResizeMode(ResizeMode::Keep);
     Window::SetStyle(WindowStyle::Sizable);
     Window::Maximize();
@@ -71,15 +73,24 @@ void Game::UpdateGame()
 
 				if (mBoard.CanOpen(targetGridPos, playerGridPos))
 				{
-					mBoard.OpenCell(targetGridPos);
+					bool hitMine = mBoard.OpenCell(targetGridPos);
 
-					Point closestPos = mBoard.GetClosestReachableGridPos(playerGridPos, targetGridPos);
-					mPlayer.SetGridPos(closestPos);
+					if (hitMine)
+					{
+						--mLife;
+						if (mLife <= 0) mState = GameState::isGameOver;
+					}
+					else
+					{
+						Point closestPos = mBoard.GetClosestReachableGridPos(playerGridPos, targetGridPos);
+						Array<Point> path = mBoard.FindPathBFS(playerGridPos, closestPos);
+						mPlayer.SetPath(path);
+					}
 				}
 				else if (mBoard.IsOpenedGridPos(targetGridPos))
 				{
 					Array<Point> path = mBoard.FindPathBFS(playerGridPos, targetGridPos);
-					if (!path.empty()) mPlayer.SetGridPos(targetGridPos);
+					if (!path.empty()) mPlayer.SetPath(path);
 				}
 			}
 			else if (mRightClicked)
@@ -89,8 +100,20 @@ void Game::UpdateGame()
 		}
 	}
 
-    if (mBoard.IsGameOver()) mState = GameState::isGameOver;
-    else if (mBoard.IsCleared()) mState = GameState::isGameClear;
+	if (mState == GameState::isPlaying)
+	{
+		mPlayer.Update();
+
+		Point playerGridPos = mPlayer.GetGridPos();
+
+		if (playerGridPos == mBoard.GetKeyGridPos())
+		{
+			mHasKey = true;
+			mBoard.RemoveKey();
+		}
+
+		if (playerGridPos == mBoard.GetGoalGridPos() && mHasKey) mState = GameState::isGameClear;
+	}
 
 	if (mState != GameState::isPlaying)
 	{
@@ -100,6 +123,8 @@ void Game::UpdateGame()
 			mBoard.CreateBoard({24, 16}, 80, Point{0, 3}, Point{7, 12}, Point{23, 9});
 			mPlayer = Player(Point{0, 3});
 			mState = GameState::isPlaying;
+			mLife = 3;
+			mHasKey = false;
 			mKeyCIsPressed = false;
 		}
 		else if (mKeyEIsPressed)
@@ -117,8 +142,22 @@ void Game::GenerateOutput()
 
     mBoard.Draw();
 
-	Point playerScreenPos = mBoard.GetScreenPosFromGridPos(mPlayer.GetGridPos());
+	if (mState == GameState::isPlaying)
+	{
+		Point hoverGridPos = mBoard.GetGridPosFromScreenPos(Cursor::PosF());
+		if (mBoard.IsValidGridPos(hoverGridPos))
+		{
+			Point hoverScreenPos = mBoard.GetScreenPosFromGridPos(hoverGridPos);
+			Rect{ Arg::center(hoverScreenPos), 50, 50 }.draw(ColorF{1.0, 0.3});
+		}
+	}
+
+	Vec2 playerScreenPos = mBoard.GetScreenPosFromGridPos(mPlayer.GetGridPos());
 	mPlayer.Draw(playerScreenPos);
+
+	for (int32 i = 0; i < mLife; ++i) TextureAsset(U"Life").scaled(0.3).draw(630 + i * 40, -390);
+
+	if (mHasKey) TextureAsset(U"Key").scaled(0.3).draw(630, -340);
 
 	if (mState == GameState::isGameOver)
     {
@@ -146,9 +185,17 @@ void Game::LoadData()
     FontAsset::Register(U"Message", FontMethod::MSDF, 48, Typeface::Bold);
     TextureAsset::Register(U"Mine", U"💣"_emoji);
     TextureAsset::Register(U"Flag", U"🚩"_emoji);
-	TextureAsset::Register(U"Cat", U"🐱"_emoji);	
 	TextureAsset::Register(U"Key", U"🗝️"_emoji);	
-	TextureAsset::Register(U"Goal", U"🏳️"_emoji);	
+	TextureAsset::Register(U"Goal", U"🚪"_emoji);	
+	TextureAsset::Register(U"Life", U"❤️"_emoji);	
+
+	TextureAsset::Register(U"Block1", U"imgs/tile_0019.png");
+	TextureAsset::Register(U"Block2", U"imgs/tile_0020.png");
+	TextureAsset::Register(U"Block3", U"imgs/tile_0027.png");
+	TextureAsset::Register(U"Wall", U"imgs/tile_0037.png");
+	TextureAsset::Register(U"Human_stand", U"imgs/character_femaleAdventurer_side.png");
+	TextureAsset::Register(U"Human_walk1", U"imgs/character_femaleAdventurer_walk0.png");
+	TextureAsset::Register(U"Human_walk2", U"imgs/character_femaleAdventurer_walk1.png");
 
 	mBoard.CreateBoard({24, 16}, 80, Point{0, 3}, Point{7, 12}, Point{23, 9});
 	mPlayer = Player(Point{0, 3});

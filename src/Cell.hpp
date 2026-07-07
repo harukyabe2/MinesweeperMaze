@@ -32,6 +32,8 @@ class Cell
 		// 地雷の場合は-1
         int32 mMineCount;
 
+		int32 mTextureIndex;
+
         bool mIsOpened;
         bool mIsFlagged;
 		bool mIsExploded;

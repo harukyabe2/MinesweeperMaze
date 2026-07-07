@@ -30,6 +30,9 @@ class Game
         Board mBoard;
 		Player mPlayer;
 
+		int32 mLife;
+		bool mHasKey;
+
         bool mLeftClicked;
         bool mRightClicked;
 		bool mKeyCIsPressed;
