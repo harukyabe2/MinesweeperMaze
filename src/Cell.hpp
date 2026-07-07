@@ -17,7 +17,6 @@ class Cell
         void Draw(const Point& screenPos) const;
 		void Reset();
 
-        // Getters and setters
         int32 GetMineCount() const { return mMineCount; }
         void SetMineCount(const int32 mineCount) { mMineCount = mineCount; }
         bool GetIsOpened() const { return mIsOpened; }
@@ -29,8 +28,8 @@ class Cell
 		void SetRole(const CellRole role) { mRole = role; }
 
     private:
-        // The number of mines around this cell
-		// If this cell is a mine, number is -1
+		// 周囲8マスの地雷の数
+		// 地雷の場合は-1
         int32 mMineCount;
 
         bool mIsOpened;

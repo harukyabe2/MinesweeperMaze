@@ -3,7 +3,6 @@
 #include "Board.hpp"
 #include "Player.hpp"
 
-// Game state
 enum class GameState
 {
     isPlaying,
@@ -25,19 +24,15 @@ class Game
         void GenerateOutput();
         void LoadData();
 
-        // Game state
         GameState mState;
-        // Camera
         Camera2D mCamera;
-        // The game board
+
         Board mBoard;
-		// The player
 		Player mPlayer;
-        // Input state
+
         bool mLeftClicked;
         bool mRightClicked;
 		bool mKeyCIsPressed;
 		bool mKeyEIsPressed;
-        // Click position
         Vec2 mClickPos;
 };

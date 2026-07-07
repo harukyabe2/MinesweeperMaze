@@ -9,7 +9,6 @@ class Player
 		void Update();
 		void Draw(const Point& screenPos) const;
 
-		// Getters and setters
 		Point GetGridPos() const { return mGridPos; }
 		void SetGridPos(const Point& gridPos) { mGridPos = gridPos;  }
 

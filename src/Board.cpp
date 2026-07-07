@@ -41,7 +41,7 @@ bool Board::IsOpenedGridPos(const Point& gridPos) const
 	return mCells[gridPos].GetIsOpened();
 }
 
-bool Board::CanOpen(const Point& targetGridPos, const Point& playerPos) const
+bool Board::CanOpen(const Point& targetGridPos, const Point& playerGridPos) const
 {
 	if (!IsValidGridPos(targetGridPos) || IsOpenedGridPos(targetGridPos) || mCells[targetGridPos].GetIsFlagged())
 	{
@@ -53,8 +53,8 @@ bool Board::CanOpen(const Point& targetGridPos, const Point& playerPos) const
 		const Point neighborPos = targetGridPos + offset;
 		if (IsValidGridPos(neighborPos) && IsOpenedGridPos(neighborPos))
 		{
-			if (neighborPos == playerPos) return true;
-			if (!FindPathBFS(playerPos, neighborPos).empty()) return true;
+			if (neighborPos == playerGridPos) return true;
+			if (!FindPathBFS(playerGridPos, neighborPos).empty()) return true;
 		}
 	}
 
@@ -63,35 +63,38 @@ bool Board::CanOpen(const Point& targetGridPos, const Point& playerPos) const
 
 void Board::ToggleFlag(const Point& gridPos)
 {
-    if (!mCells[gridPos].GetIsOpened())
+    if (!IsOpenedGridPos(gridPos))
 	{
         mCells[gridPos].SetIsFlagged(!mCells[gridPos].GetIsFlagged());
     }
 }
 
-Point Board::GetClosestReachableGridPos(const Point& start, const Point& target) const
+Point Board::GetClosestReachableGridPos(const Point& startGridPos, const Point& targetGridPos) const
 {
-	if (IsOpenedGridPos(target) && (start == target || !FindPathBFS(start, target).empty())) return target;
+	if (IsOpenedGridPos(targetGridPos) && (startGridPos == targetGridPos || !FindPathBFS(startGridPos, targetGridPos).empty()))
+	{
+		return targetGridPos;
+	}
 
-	Point closestPos = start;
+	Point closestPos = startGridPos;
 	size_t minPathLength = 999999;
 
 	for (const auto& offset : mOffsets)
 	{
-		const Point neighborPos = target + offset;
+		const Point neighborPos = targetGridPos + offset;
 		if (IsValidGridPos(neighborPos) && IsOpenedGridPos(neighborPos))
 		{
-			if (neighborPos == start)
+			if (neighborPos == startGridPos)
 			{
 				if (0 < minPathLength)
 				{
 					minPathLength = 0;
-					closestPos = start;
+					closestPos = startGridPos;
 				}
 				continue;
 			}
 
-			Array<Point> path = FindPathBFS(start, neighborPos);
+			Array<Point> path = FindPathBFS(startGridPos, neighborPos);
 			if (!path.empty() && path.size() < minPathLength)
 			{
 				minPathLength = path.size();
@@ -113,7 +116,6 @@ void Board::CreateBoard(const Size& size, int32 mineCount, const Point& startGri
 	{
 		mCells = Grid<Cell>(size);
 		mMines.clear();
-		// avoid reallocation
 		mMines.reserve(mineCount);
 
 		mCells[mStartGridPos].SetRole(CellRole::Start);
@@ -122,7 +124,6 @@ void Board::CreateBoard(const Size& size, int32 mineCount, const Point& startGri
 
 		int32 currentMineCount = mineCount;
 
-		// Randomly place mines
 		while (currentMineCount > 0)
 		{
 		    const Point gridPos = {Random(0, size.x - 1), Random(0, size.y - 1)};
@@ -135,19 +136,19 @@ void Board::CreateBoard(const Size& size, int32 mineCount, const Point& startGri
 		    }
 		}
 
+		// 必ずスタートからキー、キーからゴールまでの経路が存在するようにする
 		if (CheckPathBFS(mStartGridPos, mKeyGridPos) && CheckPathBFS(mKeyGridPos, mGoalGridPos))
 		{
 			break;
 		}
 	}
 
-    // Calculate mine counts for each cell
     for (int32 y = 0; y < size.y; ++y)
     {
         for (int32 x = 0; x < size.x; ++x)
         {
-            const Point pos = {x, y};
-            mCells[pos].SetMineCount(GetMineCount(pos));
+            const Point gridPos = {x, y};
+            mCells[gridPos].SetMineCount(GetMineCount(gridPos));
         }
     }
 
@@ -161,36 +162,26 @@ void Board::CreateBoard(const Size& size, int32 mineCount, const Point& startGri
 
 int32 Board::GetMineCount(const Point& gridPos)
 {
-    // If this cell is a mine, return -1
-    if (mCells[gridPos].GetMineCount() == -1)
-    {
-        return -1;
-    }
+    if (mCells[gridPos].GetMineCount() == -1) return -1;
     
     int32 mineCount = 0;
-    // Check all 8 neighbors
     for (const auto& offset : mOffsets)
     {
         const Point neighborPos = gridPos + offset;
-        if (neighborPos.x < 0 || neighborPos.x >= mCells.width() ||
-            neighborPos.y < 0 || neighborPos.y >= mCells.height())
-        {
-            continue;
-        }
-        if (mCells[neighborPos].GetMineCount() == -1)
-        {
-            ++mineCount;
-        }
+
+        if (!IsValidGridPos(neighborPos)) continue;
+        if (mCells[neighborPos].GetMineCount() == -1) ++mineCount;
+        
     }
     return mineCount;
 }
 
 Point Board::GetGridPosFromScreenPos(const Vec2& screenPos)
 {
-    Point idx;
-    idx.x = static_cast<int>(Math::Floor((screenPos.x + (50 * mCells.width()) / 2.0) / 50.0));
-    idx.y = static_cast<int>(Math::Floor((screenPos.y + (50 * mCells.height()) / 2.0) / 50.0));
-    return idx;
+    Point gridPos;
+    gridPos.x = static_cast<int>(Math::Floor((screenPos.x + (50 * mCells.width()) / 2.0) / 50.0));
+    gridPos.y = static_cast<int>(Math::Floor((screenPos.y + (50 * mCells.height()) / 2.0) / 50.0));
+    return gridPos;
 }
 
 Point Board::GetScreenPosFromGridPos(const Point& gridPos) const
@@ -201,20 +192,18 @@ Point Board::GetScreenPosFromGridPos(const Point& gridPos) const
 
 void Board::OpenCell(const Point& gridPos)
 {
-	// If the position is out of bounds, or the cell is already opened or flagged, do nothing
-    if (gridPos.x < 0 || gridPos.x >= mCells.width() ||
-        gridPos.y < 0 || gridPos.y >= mCells.height() ||
+    if (!IsValidGridPos(gridPos) ||
         mCells[gridPos].GetIsOpened() ||
         mCells[gridPos].GetIsFlagged())
     {
         return;
     }
+
     mCells[gridPos].SetIsOpened(true);
     --mSafeCellCount;
 
-	// If this cell has no mines around, open all its neighbors recursively
-	// If this cell is a mine, set it as exploded and open all mines, then end the game
-    if (mCells[gridPos].GetMineCount() == 0)
+	// 周囲8マスに地雷がない場合は、再帰的に周囲8マスを開く
+	if (mCells[gridPos].GetMineCount() == 0)
     {
         for (const auto& offset : mOffsets)
         {
@@ -236,33 +225,27 @@ void Board::OpenCell(const Point& gridPos)
     }
 }
 
-bool Board::CheckPathBFS(const Point& start, const Point& goal)
+bool Board::CheckPathBFS(const Point& startGridPos, const Point& goalGridPos)
 {
 	bool result = false;
 
-	// Queue for searching the path
 	Grid<int32> visited(mCells.size(), 0);
 	std::queue<Point> que;
-	que.push(start);
-	visited[start] = 1;
+	que.push(startGridPos);
+	visited[startGridPos] = 1;
 
 	while (!que.empty())
 	{
 		Point gridPos = que.front();
 		que.pop();
-		if (gridPos == goal)
-		{
-			return true;
-		}
 
+		if (gridPos == goalGridPos) return true;
+		
 		for (const auto& dir : mDirections)
 		{
 			const Point neighborPos = gridPos + dir;
-			if (neighborPos.x < 0 || neighborPos.x >= mCells.width() ||
-			    neighborPos.y < 0 || neighborPos.y >= mCells.height())
-			{
-			    continue;
-			}
+
+			if (!IsValidGridPos(neighborPos)) continue;
 
 			if (mCells[neighborPos].GetMineCount() != -1 && !visited[neighborPos])
 			{
@@ -283,17 +266,17 @@ bool Board::IsSafeZone(const Point& gridPos, const Point& startGridPos, const Po
 	return false;
 }
 
-Array<Point> Board::FindPathBFS(const Point& start, const Point& goal) const
+Array<Point> Board::FindPathBFS(const Point& startGridPos, const Point& goalGridPos) const
 {
 	Array<Point> path;
-	if (start == goal) return path;
-	if (!IsValidGridPos(start) || !IsValidGridPos(goal)) return path;
-	if (!IsOpenedGridPos(start) || !IsOpenedGridPos(goal)) return path;
+	if (startGridPos == goalGridPos) return path;
+	if (!IsValidGridPos(startGridPos) || !IsValidGridPos(goalGridPos)) return path;
+	if (!IsOpenedGridPos(startGridPos) || !IsOpenedGridPos(goalGridPos)) return path;
 
 	Grid<Point> parent(mCells.size(), Point{-1, -1});
 	std::queue<Point> que;
-	que.push(start);
-	parent[start] = start;
+	que.push(startGridPos);
+	parent[startGridPos] = startGridPos;
 
 	bool found = false;
 	while (!que.empty())
@@ -301,7 +284,7 @@ Array<Point> Board::FindPathBFS(const Point& start, const Point& goal) const
 		Point gridPos = que.front();
 		que.pop();
 
-		if (gridPos == goal)
+		if (gridPos == goalGridPos)
 		{
 			found = true;
 			break;
@@ -320,12 +303,13 @@ Array<Point> Board::FindPathBFS(const Point& start, const Point& goal) const
 
 	if (found)
 	{
-		Point current = goal;
-		while (current != start)
+		Point current = goalGridPos;
+		while (current != startGridPos)
 		{
-			path.push_front(current);
+			path.push_back(current);
 			current = parent[current];
 		}
+		path.reverse();
 	}
 
 	return path;
