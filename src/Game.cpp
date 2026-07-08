@@ -74,6 +74,7 @@ void Game::UpdateGame()
 				if (mBoard.CanOpen(targetGridPos, playerGridPos))
 				{
 					bool hitMine = mBoard.OpenCell(targetGridPos);
+					AudioAsset(U"Break").playOneShot();
 
 					if (hitMine)
 					{
@@ -106,10 +107,11 @@ void Game::UpdateGame()
 
 		Point playerGridPos = mPlayer.GetGridPos();
 
-		if (playerGridPos == mBoard.GetKeyGridPos())
+		if (playerGridPos == mBoard.GetKeyGridPos() && !mHasKey)
 		{
 			mHasKey = true;
 			mBoard.RemoveKey();
+			AudioAsset(U"Key").playOneShot();
 		}
 
 		if (playerGridPos == mBoard.GetGoalGridPos() && mHasKey) mState = GameState::isGameClear;
@@ -196,6 +198,10 @@ void Game::LoadData()
 	TextureAsset::Register(U"Human_stand", U"imgs/character_femaleAdventurer_side.png");
 	TextureAsset::Register(U"Human_walk1", U"imgs/character_femaleAdventurer_walk0.png");
 	TextureAsset::Register(U"Human_walk2", U"imgs/character_femaleAdventurer_walk1.png");
+
+	AudioAsset::Register(U"Key", Resource(U"sounds/GB-Action01-09(Item).mp3"));
+	AudioAsset::Register(U"Break", Resource(U"sounds/SNES-RPG01-01(Chest).mp3"));
+	AudioAsset::Register(U"Walk", Resource(U"sounds/SNES-RPG01-05(Stairs).mp3"));
 
 	mBoard.CreateBoard({24, 16}, 80, Point{0, 3}, Point{7, 12}, Point{23, 9});
 	mPlayer = Player(Point{0, 3});

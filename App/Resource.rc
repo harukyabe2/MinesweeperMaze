@@ -127,6 +127,10 @@ Resource(engine/soundfont/GMGSx.sf2.zstdcmp)
 //
 //////////////////////////////////////////////////////
 
+Resource(sounds/GB-Action01-09(Item).mp3)
+Resource(sounds/SNES-RPG01-01(Chest).mp3)
+Resource(sounds/SNES-RPG01-05(Stairs).mp3)
+
 
 
 /* examples 
