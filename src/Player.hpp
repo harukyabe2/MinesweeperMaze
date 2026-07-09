@@ -10,10 +10,13 @@ class Player
 		void Draw(const Vec2& screenPos) const;
 
 		void SetPath(const Array<Point>& path);
-		Vec2 GetDoubleGridPos() const { return mDoubleGridPos; }
+
+		void TakeDamage();
 
 		Point GetGridPos() const { return mGridPos; }
 		void SetGridPos(const Point& gridPos) { mGridPos = gridPos;  }
+		Vec2 GetDoubleGridPos() const { return mDoubleGridPos; }
+		bool GetIsMoving() const { return mIsMoving; }
 
 	private:
 		Point mGridPos;
@@ -23,4 +26,6 @@ class Player
 
 		Array<Point> mPath;
 		size_t mCurrentPathIndex;
+
+		Stopwatch mDamageTimer;
 };
