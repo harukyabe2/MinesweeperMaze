@@ -37,9 +37,14 @@ bool Board::IsOpenedGridPos(const Point& gridPos) const
 	return mCells[gridPos].GetIsOpened();
 }
 
+bool Board::IsFlaggedGridPos(const Point& gridPos) const
+{
+	return mCells[gridPos].GetIsFlagged();
+}
+
 bool Board::CanOpen(const Point& targetGridPos, const Point& playerGridPos) const
 {
-	if (!IsValidGridPos(targetGridPos) || IsOpenedGridPos(targetGridPos) || mCells[targetGridPos].GetIsFlagged())
+	if (!IsValidGridPos(targetGridPos) || IsOpenedGridPos(targetGridPos) || IsFlaggedGridPos(targetGridPos))
 	{
 		return false;
 	}
@@ -47,6 +52,10 @@ bool Board::CanOpen(const Point& targetGridPos, const Point& playerGridPos) cons
 	for (const auto& offset : mOffsets)
 	{
 		const Point neighborPos = targetGridPos + offset;
+
+		// 目標地がプレイヤーの周囲8マスにある
+		// あるいは
+		// 目標地が、すでに開いているかつプレイヤーが行くことができるところの周囲8マスにあれば開けられる
 		if (IsValidGridPos(neighborPos) && IsOpenedGridPos(neighborPos))
 		{
 			if (neighborPos == playerGridPos) return true;
@@ -57,17 +66,27 @@ bool Board::CanOpen(const Point& targetGridPos, const Point& playerGridPos) cons
 	return false;
 }
 
+bool Board::IsWalkableGridPos(const Point& gridPos) const
+{
+	return IsValidGridPos(gridPos) &&
+		   IsOpenedGridPos(gridPos) &&
+		   mCells[gridPos].GetMineCount() != -1;
+}
+
 void Board::ToggleFlag(const Point& gridPos)
 {
     if (!IsOpenedGridPos(gridPos))
 	{
-        mCells[gridPos].SetIsFlagged(!mCells[gridPos].GetIsFlagged());
+        mCells[gridPos].SetIsFlagged(!IsFlaggedGridPos(gridPos));
     }
 }
 
 Point Board::GetClosestReachableGridPos(const Point& startGridPos, const Point& targetGridPos) const
 {
-	if (IsOpenedGridPos(targetGridPos) && (startGridPos == targetGridPos || !FindPathBFS(startGridPos, targetGridPos).empty()))
+	// 地雷のあるマスは開いていても通れないようにする
+	// 開いているマスでもプレイヤーが行くことができないマスも存在するため、それを弾く
+	if (IsWalkableGridPos(targetGridPos) &&
+		(startGridPos == targetGridPos || !FindPathBFS(startGridPos, targetGridPos).empty()))
 	{
 		return targetGridPos;
 	}
@@ -78,8 +97,9 @@ Point Board::GetClosestReachableGridPos(const Point& startGridPos, const Point& 
 	for (const auto& offset : mOffsets)
 	{
 		const Point neighborPos = targetGridPos + offset;
-		if (IsValidGridPos(neighborPos) && IsOpenedGridPos(neighborPos))
+		if (IsWalkableGridPos(neighborPos))
 		{
+			// 目標地の周囲8マスにプレイヤーの現在地がある場合は動かないので現在地を設定する
 			if (neighborPos == startGridPos)
 			{
 				if (0 < minPathLength)
@@ -90,6 +110,7 @@ Point Board::GetClosestReachableGridPos(const Point& startGridPos, const Point& 
 				continue;
 			}
 
+			// 目標地の周囲8マスの中から最短の位置と経路を選ぶ
 			Array<Point> path = FindPathBFS(startGridPos, neighborPos);
 			if (!path.empty() && path.size() < minPathLength)
 			{
@@ -132,7 +153,7 @@ void Board::CreateBoard(const Size& size, int32 mineCount, const Point& startGri
 		    }
 		}
 
-		// 必ずスタートからキー、キーからゴールまでの経路が存在するようにする
+		// 必ずスタートからキー、キーからゴールまでの経路が存在するようにBFSで調べる
 		if (CheckPathBFS(mStartGridPos, mKeyGridPos) && CheckPathBFS(mKeyGridPos, mGoalGridPos))
 		{
 			break;
@@ -257,14 +278,6 @@ bool Board::CheckPathBFS(const Point& startGridPos, const Point& goalGridPos)
 	return result;
 }
 
-bool Board::IsSafeZone(const Point& gridPos, const Point& startGridPos, const Point& keyGridPos, const Point& goalGridPos)
-{
-	if (Abs(gridPos.x - startGridPos.x) <= 1 && Abs(gridPos.y - startGridPos.y) <= 1) return true;
-	if (Abs(gridPos.x - keyGridPos.x) <= 1 && Abs(gridPos.y - keyGridPos.y) <= 1) return true;
-	if (Abs(gridPos.x - goalGridPos.x) <= 1 && Abs(gridPos.y - goalGridPos.y) <= 1) return true;
-	return false;
-}
-
 Array<Point> Board::FindPathBFS(const Point& startGridPos, const Point& goalGridPos) const
 {
 	Array<Point> path;
@@ -292,7 +305,7 @@ Array<Point> Board::FindPathBFS(const Point& startGridPos, const Point& goalGrid
 		for (const auto& dir : mDirections)
 		{
 			Point nextPos = gridPos + dir;
-			if (IsValidGridPos(nextPos) && IsOpenedGridPos(nextPos) && parent[nextPos] == Point{-1, -1})
+			if (IsWalkableGridPos(nextPos) && parent[nextPos] == Point{-1, -1})
 			{
 				parent[nextPos] = gridPos;
 				que.push(nextPos);
@@ -314,6 +327,13 @@ Array<Point> Board::FindPathBFS(const Point& startGridPos, const Point& goalGrid
 	return path;
 }
 
+bool Board::IsSafeZone(const Point& gridPos, const Point& startGridPos, const Point& keyGridPos, const Point& goalGridPos)
+{
+	if (Abs(gridPos.x - startGridPos.x) <= 1 && Abs(gridPos.y - startGridPos.y) <= 1) return true;
+	if (Abs(gridPos.x - keyGridPos.x) <= 1 && Abs(gridPos.y - keyGridPos.y) <= 1) return true;
+	if (Abs(gridPos.x - goalGridPos.x) <= 1 && Abs(gridPos.y - goalGridPos.y) <= 1) return true;
+	return false;
+}
 
 
 

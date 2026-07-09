@@ -10,12 +10,15 @@ class Board
         void Draw() const;
 		void Reset();
 
-		// 指定したマスが盤面内にあるか、すでに開いているかを判定
+		// 指定したマスが盤面内にあるか、すでに開いているか、フラグが立てられているかを判定
 		bool IsValidGridPos(const Point& gridPos) const;
 		bool IsOpenedGridPos(const Point& gridPos) const;
+		bool IsFlaggedGridPos(const Point& gridPos) const;
 
 		// 対象のマスが開けるかどうかを判定
 		bool CanOpen(const Point& targetGridPos, const Point& playerGridPos) const;
+
+		bool IsWalkableGridPos(const Point& gridPos) const;
 
 		void ToggleFlag(const Point& gridPos);
 
@@ -32,7 +35,7 @@ class Board
 		Point GetScreenPosFromGridPos(const Point& gridPos) const;
 		Vec2 GetScreenPosFromGridPos(const Vec2& gridPos) const;
 
-        bool OpenCell(const Point& gridPos);
+		bool OpenCell(const Point& gridPos);
 		void RemoveKey();
 
 		// BFSを用いて、ゴールまでの経路が存在するか判定
