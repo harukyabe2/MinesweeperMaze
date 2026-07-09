@@ -5,7 +5,7 @@ Player::Player(const Point& startGridPos)
 , mDoubleGridPos(startGridPos.x, startGridPos.y)
 , mIsMoving(false)
 , mCurrentPathIndex(0)
-, mDamageTimer(0.5s)
+, mDamageTimer(0.0s)
 {
 }
 
