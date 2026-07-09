@@ -2,6 +2,7 @@
 #include <Siv3D.hpp>
 #include "Board.hpp"
 #include "Player.hpp"
+#include "Common.hpp"
 
 enum class GameState
 {
@@ -10,19 +11,18 @@ enum class GameState
     isGameClear
 };
 
-class Game
+class Game : public App::Scene
 {
     public:
-        Game();
+        Game(const InitData& init);
 
-        bool Initialize();
-        void RunLoop();
-        void Shutdown();
+		void update() override;
+		void draw() const override;
+
     private:
         void ProcessInput();
         void UpdateGame();
-        void GenerateOutput();
-        void LoadData();
+        void GenerateOutput() const;
 
 		void ProcessCellOpenResult(bool hitMine);
 
@@ -41,6 +41,6 @@ class Game
         bool mLeftClicked;
         bool mRightClicked;
 		bool mKeyCIsPressed;
-		bool mKeyEIsPressed;
+		bool mKeyBIsPressed;
         Vec2 mClickPos;
 };

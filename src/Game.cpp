@@ -1,7 +1,8 @@
 ﻿#include "Game.hpp"
 
-Game::Game()
-: mState(GameState::isPlaying)
+Game::Game(const InitData& init)
+: IScene{ init }
+, mState(GameState::isPlaying)
 , mCamera(Vec2{0, 0}, 1.0, CameraControl::None_)
 , mBoard()
 , mPlayer(Point{0, 0})
@@ -12,33 +13,22 @@ Game::Game()
 , mLeftClicked(false)
 , mRightClicked(false)
 , mKeyCIsPressed(false)
-, mKeyEIsPressed(false)
+, mKeyBIsPressed(false)
 , mClickPos(0, 0)
 {
-
+	mBoard.CreateBoard(getData().boardSize, getData().mineCount, getData().startGridPos, getData().keyGridPos, getData().goalGridPos);
+	mPlayer = Player(getData().startGridPos);
 }
 
-bool Game::Initialize()
+void Game::update()
 {
-	Scene::Resize(1500, 900);
-	Scene::SetResizeMode(ResizeMode::Keep);
-    Window::SetStyle(WindowStyle::Sizable);
-    Window::Maximize();
-    Window::SetTitle(U"Minesweeper Game");
-
-    LoadData();
-
-    return true;
+	ProcessInput();
+    UpdateGame();
 }
 
-void Game::RunLoop()
+void Game::draw() const
 {
-    while (System::Update())
-    {
-        ProcessInput();
-        UpdateGame();
-        GenerateOutput();
-    }
+    GenerateOutput();
 }
 
 void Game::ProcessInput()
@@ -57,7 +47,7 @@ void Game::ProcessInput()
 	else
 	{
 		mKeyCIsPressed = KeyC.down();
-		mKeyEIsPressed = KeyE.down();
+		mKeyBIsPressed = KeyB.down();
 	}
 }
 
@@ -67,17 +57,11 @@ void Game::UpdateGame()
 	{
 		if (mKeyCIsPressed)
 		{
-			mBoard.Reset();
-			mBoard.CreateBoard({24, 16}, 80, Point{0, 3}, Point{7, 12}, Point{23, 9});
-			mPlayer = Player(Point{0, 3});
-			mState = GameState::isPlaying;
-			mLife = 3;
-			mHasKey = false;
-			mKeyCIsPressed = false;
+			changeScene(U"Game");
 		}
-		else if (mKeyEIsPressed)
+		else if (mKeyBIsPressed)
 		{
-			System::Exit();
+			changeScene(U"Title");
 		}
 
 		return;
@@ -163,7 +147,7 @@ void Game::UpdateGame()
 	}
 }
 
-void Game::GenerateOutput()
+void Game::GenerateOutput() const
 {
     Scene::SetBackground(Palette::Black);
 
@@ -200,44 +184,9 @@ void Game::GenerateOutput()
 
 		double alpha = Periodic::Sine0_1(2.0s);
         FontAsset(U"Message")(U"PRESS [C] to Continue").drawAt({0, 120}, ColorF{1.0, alpha});
-        FontAsset(U"Message")(U"PRESS [E] or [Esc] to End").drawAt({0, 190}, ColorF{1.0, alpha});
+        FontAsset(U"Message")(U"PRESS [B] to Return Title").drawAt({0, 190}, ColorF{1.0, alpha});
+        FontAsset(U"Message")(U"PRESS [Esc] to End").drawAt({0, 260}, ColorF{1.0, alpha});
     }
-}
-
-void Game::LoadData()
-{
-    FontAsset::Register(U"Number", FontMethod::MSDF, 48, Typeface::Bold);
-    FontAsset::Register(U"Message", FontMethod::MSDF, 48, Typeface::Bold);
-
-    TextureAsset::Register(U"Mine", U"💣"_emoji);
-    TextureAsset::Register(U"Flag", U"🚩"_emoji);
-	TextureAsset::Register(U"Key", U"🗝️"_emoji);	
-	TextureAsset::Register(U"Goal", U"🚪"_emoji);	
-	TextureAsset::Register(U"Life", U"❤️"_emoji);	
-
-	TextureAsset::Register(U"Block1", U"imgs/tile_0019.png");
-	TextureAsset::Register(U"Block2", U"imgs/tile_0020.png");
-	TextureAsset::Register(U"Block3", U"imgs/tile_0027.png");
-	TextureAsset::Register(U"Wall", U"imgs/tile_0037.png");
-	TextureAsset::Register(U"Human_stand", U"imgs/character_femaleAdventurer_side.png");
-	TextureAsset::Register(U"Human_walk1", U"imgs/character_femaleAdventurer_walk0.png");
-	TextureAsset::Register(U"Human_walk2", U"imgs/character_femaleAdventurer_walk1.png");
-	TextureAsset::Register(U"Human_damage", U"imgs/character_femaleAdventurer_shoveBack.png");
-	TextureAsset::Register(U"Human_damage2", U"imgs/character_femaleAdventurer_shoveBack_white.png");
-
-	AudioAsset::Register(U"Key", Resource(U"sounds/GB-Action01-09(Item).mp3"));
-	AudioAsset::Register(U"Break", Resource(U"sounds/SNES-RPG01-01(Chest).mp3"));
-	AudioAsset::Register(U"Walk", Resource(U"sounds/SNES-RPG01-05(Stairs).mp3"));
-	AudioAsset::Register(U"Mine", Resource(U"sounds/SNES-RPG01-03(Door).mp3"));
-	AudioAsset::Register(U"Clear", Resource(U"sounds/Arcade-Action01-4(Score).mp3"));
-	AudioAsset::Register(U"GameOver", Resource(U"sounds/GB-Action01-06(Miss).mp3"));
-
-	mBoard.CreateBoard({24, 16}, 80, Point{0, 3}, Point{7, 12}, Point{23, 9});
-	mPlayer = Player(Point{0, 3});
-}
-
-void Game::Shutdown()
-{
 }
 
 void Game::ProcessCellOpenResult(bool hitMine)
