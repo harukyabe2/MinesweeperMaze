@@ -190,7 +190,7 @@ int32 Board::GetMineCount(const Point& gridPos)
     return mineCount;
 }
 
-Point Board::GetGridPosFromScreenPos(const Vec2& screenPos)
+Point Board::GetGridPosFromScreenPos(const Vec2& screenPos) const
 {
     Point gridPos;
     gridPos.x = static_cast<int>(Math::Floor((screenPos.x + (50 * mCells.width()) / 2.0) / 50.0));

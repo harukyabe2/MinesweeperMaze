@@ -31,7 +31,7 @@ class Board
         int32 GetMineCount(const Point& gridPos);
 
 		// スクリーン座標とマス目の相互変換
-        Point GetGridPosFromScreenPos(const Vec2& screenPos);
+        Point GetGridPosFromScreenPos(const Vec2& screenPos) const;
 		Point GetScreenPosFromGridPos(const Point& gridPos) const;
 		Vec2 GetScreenPosFromGridPos(const Vec2& gridPos) const;
 
