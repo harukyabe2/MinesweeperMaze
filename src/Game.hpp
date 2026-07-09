@@ -24,6 +24,8 @@ class Game
         void GenerateOutput();
         void LoadData();
 
+		void ProcessCellOpenResult(bool hitMine);
+
         GameState mState;
         Camera2D mCamera;
 
@@ -32,6 +34,9 @@ class Game
 
 		int32 mLife;
 		bool mHasKey;
+
+		bool mHasPendingOpen;
+		Point mPendingTargetGridPos;
 
         bool mLeftClicked;
         bool mRightClicked;
