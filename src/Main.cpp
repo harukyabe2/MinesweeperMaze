@@ -39,6 +39,7 @@ void LoadData()
 {
     FontAsset::Register(U"Number", FontMethod::MSDF, 48, Typeface::Bold);
     FontAsset::Register(U"Message", FontMethod::MSDF, 48, Typeface::Bold);
+    FontAsset::Register(U"Time", FontMethod::MSDF, 24, Typeface::Bold);
 
     TextureAsset::Register(U"Mine", U"💣"_emoji);
     TextureAsset::Register(U"Flag", U"🚩"_emoji);
