@@ -2,7 +2,6 @@
 
 # 動画<br>
 [![プレイ動画](https://img.youtube.com/vi/動画ID/maxresdefault.jpg)](https://youtu.be/fUZvUbDef1w)
-https://youtu.be/fUZvUbDef1w
 
 # 利用ツール<br>
 <img src="https://img.shields.io/badge/-C++-00599C.svg?logo=c%2B%2B&style=flat-square&logoColor=white" alt="C++"> <img src="https://img.shields.io/badge/-Siv3D-00A4E8.svg?style=flat-square&logoColor=white" alt="Siv3D"><br>
