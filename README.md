@@ -1,6 +1,7 @@
 ## マインスイーパー迷路<br>
 
 # 動画<br>
+[![プレイ動画](https://img.youtube.com/vi/動画ID/maxresdefault.jpg)](https://youtu.be/fUZvUbDef1w)
 https://youtu.be/fUZvUbDef1w
 
 # 利用ツール<br>
