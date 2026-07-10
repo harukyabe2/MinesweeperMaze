@@ -46,6 +46,8 @@ class Board
 		// スタート、キー、ゴールの周囲8マスには地雷を配置しないようにするための判定
 		bool IsSafeZone(const Point& gridPos, const Point& startGridPos, const Point& keyGridPos, const Point& goalGridPos);
 
+		int32 GetOpenedCellCount() const;
+
 		Point GetKeyGridPos() const { return mKeyGridPos; }
 		Point GetGoalGridPos() const { return mGoalGridPos; }
 

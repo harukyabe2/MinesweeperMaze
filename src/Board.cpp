@@ -335,5 +335,21 @@ bool Board::IsSafeZone(const Point& gridPos, const Point& startGridPos, const Po
 	return false;
 }
 
+int32 Board::GetOpenedCellCount() const
+{
+	int32 count = 0;
+
+    const Size size = mCells.size();
+    for (int32 y = 0; y < size.y; ++y)
+    {
+        for (int32 x = 0; x < size.x; ++x)
+        {
+			if (mCells[Point{ x, y }].GetIsOpened()) ++count;
+        }
+    }
+
+	return count;
+}
+
 
 
