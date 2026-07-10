@@ -8,6 +8,8 @@ Game::Game(const InitData& init)
 , mPlayer(Point{0, 0})
 , mLife(3)
 , mHasKey(false)
+, mStopwatch{ StartImmediately::Yes }
+, mScore(0)
 , mHasPendingOpen(false)
 , mPendingTargetGridPos(0, 0)
 , mLeftClicked(false)
@@ -142,7 +144,12 @@ void Game::UpdateGame()
 		if (playerGridPos == mBoard.GetGoalGridPos() && mHasKey)
 		{
 			mState = GameState::isGameClear;
+			mStopwatch.pause();
 			AudioAsset(U"Clear").playOneShot();
+
+			int32 opendCount = mBoard.GetOpenedCellCount();
+			mScore = 10000 + (mLife * 2000) - (opendCount * 30);
+			mScore = Max(0, mScore);
 		}
 	}
 }
@@ -173,6 +180,9 @@ void Game::GenerateOutput() const
 
 	if (mHasKey) TextureAsset(U"Key").scaled(0.3).draw(630, -340);
 
+	String timeText = mStopwatch.format(U"mm:ss.xx");
+	FontAsset(U"Time")(timeText).draw(630, -290, Palette::White);
+
 	if (mState != GameState::isPlaying)
     {
 		RectF(Vec2{ -640, -450 }, Size{ 1500, 900 }).draw(ColorF{ 0.0, 0.7 });
@@ -181,6 +191,12 @@ void Game::GenerateOutput() const
 		Color resultColor = (mState == GameState::isGameOver) ? Palette::Red : Palette::Yellow;
 
         FontAsset(U"Message")(resultText).drawAt(100, {0, -150}, resultColor);
+
+		if (mState == GameState::isGameClear)
+		{
+			FontAsset(U"Message")(U"Time: {}"_fmt(timeText)).drawAt({0, -50}, Palette::White);
+			FontAsset(U"Message")(U"Score: {}"_fmt(mScore)).drawAt({0, 20}, Palette::White);
+		}
 
 		double alpha = Periodic::Sine0_1(2.0s);
         FontAsset(U"Message")(U"PRESS [C] to Continue").drawAt({0, 120}, ColorF{1.0, alpha});
@@ -202,6 +218,7 @@ void Game::ProcessCellOpenResult(bool hitMine)
 		else
 		{
 			mState = GameState::isGameOver;
+			mStopwatch.pause();
 			AudioAsset(U"GameOver").playOneShot();
 		}
 	}

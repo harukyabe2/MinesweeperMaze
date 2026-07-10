@@ -34,6 +34,8 @@ class Game : public App::Scene
 
 		int32 mLife;
 		bool mHasKey;
+		Stopwatch mStopwatch;
+		int32 mScore;
 
 		bool mHasPendingOpen;
 		Point mPendingTargetGridPos;
