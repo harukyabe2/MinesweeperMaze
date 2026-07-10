@@ -8,7 +8,8 @@
 ゲームの実行中に**F1**キーを押すことでSiv3Dのライセンス情報を表示できます
 
 **アセット利用情報**<br>
-なし
+Sound Effects: [OtoLogic(CC BY 4.0)](https://otologic.jp/)<br>
+Graphics: [Kenney(CC0)](https://kenney.nl/)
 <br>
 
 # 操作説明<br>
