@@ -47,15 +47,15 @@ void LoadData()
 	TextureAsset::Register(U"Goal", U"🚪"_emoji);	
 	TextureAsset::Register(U"Life", U"❤️"_emoji);	
 
-	TextureAsset::Register(U"Block1", U"imgs/tile_0019.png");
-	TextureAsset::Register(U"Block2", U"imgs/tile_0020.png");
-	TextureAsset::Register(U"Block3", U"imgs/tile_0027.png");
-	TextureAsset::Register(U"Wall", U"imgs/tile_0037.png");
-	TextureAsset::Register(U"Human_stand", U"imgs/character_femaleAdventurer_side.png");
-	TextureAsset::Register(U"Human_walk1", U"imgs/character_femaleAdventurer_walk0.png");
-	TextureAsset::Register(U"Human_walk2", U"imgs/character_femaleAdventurer_walk1.png");
-	TextureAsset::Register(U"Human_damage", U"imgs/character_femaleAdventurer_shoveBack.png");
-	TextureAsset::Register(U"Human_damage2", U"imgs/character_femaleAdventurer_shoveBack_white.png");
+	TextureAsset::Register(U"Block1", Resource(U"imgs/tile_0019.png"));
+	TextureAsset::Register(U"Block2", Resource(U"imgs/tile_0020.png"));
+	TextureAsset::Register(U"Block3", Resource(U"imgs/tile_0027.png"));
+	TextureAsset::Register(U"Wall", Resource(U"imgs/tile_0037.png"));
+	TextureAsset::Register(U"Human_stand", Resource(U"imgs/character_femaleAdventurer_side.png"));
+	TextureAsset::Register(U"Human_walk1", Resource(U"imgs/character_femaleAdventurer_walk0.png"));
+	TextureAsset::Register(U"Human_walk2", Resource(U"imgs/character_femaleAdventurer_walk1.png"));
+	TextureAsset::Register(U"Human_damage", Resource(U"imgs/character_femaleAdventurer_shoveBack.png"));
+	TextureAsset::Register(U"Human_damage2", Resource(U"imgs/character_femaleAdventurer_shoveBack_white.png"));
 
 	AudioAsset::Register(U"Key", Resource(U"sounds/GB-Action01-09(Item).mp3"));
 	AudioAsset::Register(U"Break", Resource(U"sounds/SNES-RPG01-01(Chest).mp3"));

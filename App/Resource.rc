@@ -134,7 +134,17 @@ Resource(sounds/SNES-RPG01-03(Door).mp3)
 Resource(sounds/Arcade-Action01-4(Score).mp3)
 Resource(sounds/GB-Action01-06(Miss).mp3)
 
-
+Resource(imgs/tile_0019.png)
+Resource(imgs/tile_0020.png)
+Resource(imgs/tile_0027.png)
+Resource(imgs/tile_0037.png)
+Resource(imgs/character_femaleAdventurer_side.png)
+Resource(imgs/character_femaleAdventurer_walk0.png)
+Resource(imgs/character_femaleAdventurer_walk1.png)
+Resource(imgs/character_femaleAdventurer_shoveBack.png)
+Resource(imgs/character_femaleAdventurer_shoveBack_white.png)
+	
+	
 
 /* examples 
 
