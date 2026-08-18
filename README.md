@@ -10,7 +10,6 @@
 ### ルール<br>
 - 盤面上にある鍵を取ってゴールする<br>
 - プレイヤーは上下左右の4方向に進むことができ，開けられるマスはプレイヤーが行くことができるかつその周囲8マスである
-<br>
 
 ### 操作<br>
 **タイトル画面**<br>
@@ -67,7 +66,6 @@
 ## 制作体制と期間<br>
 - **個人制作**<br>
 - **制作期間**：10日
-<br>
 
 ## 利用ツール<br>
 <img src="https://img.shields.io/badge/-C++-00599C.svg?logo=c%2B%2B&style=flat-square&logoColor=white" alt="C++"> <img src="https://img.shields.io/badge/-Siv3D-00A4E8.svg?style=flat-square&logoColor=white" alt="Siv3D"><br>
