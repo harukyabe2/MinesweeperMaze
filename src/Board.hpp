@@ -50,6 +50,7 @@ class Board
 
 		Point GetKeyGridPos() const { return mKeyGridPos; }
 		Point GetGoalGridPos() const { return mGoalGridPos; }
+		bool GetIsNumberCell(const Point& gridPos) const { return mCells[gridPos].GetMineCount() > 0; }
 
     private:
         Grid<Cell> mCells;

@@ -7,7 +7,7 @@ class Player
 		Player(const Point& startGridPos);
 
 		void Update();
-		void Draw(const Vec2& screenPos) const;
+		void Draw(const Vec2& screenPos, bool isOnNumberCell) const;
 
 		void SetPath(const Array<Point>& path);
 

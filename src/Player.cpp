@@ -41,7 +41,7 @@ void Player::Update()
 	}
 }
 
-void Player::Draw(const Vec2& screenPos) const
+void Player::Draw(const Vec2& screenPos, bool isOnNumberCell) const
 {
 	if (mDamageTimer.isRunning())
 	{
@@ -57,7 +57,8 @@ void Player::Draw(const Vec2& screenPos) const
 		}
 		else
 		{
-			TextureAsset(U"Human_stand").resized(60).drawAt(screenPos.x, screenPos.y - 5);
+			if (isOnNumberCell) TextureAsset(U"Human_stand").resized(60).drawAt(screenPos.x, screenPos.y - 5, ColorF{ 1.0, 0.45 });
+			else TextureAsset(U"Human_stand").resized(60).drawAt(screenPos.x, screenPos.y - 5);
 		}
 	}
 }

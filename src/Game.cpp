@@ -174,7 +174,8 @@ void Game::GenerateOutput() const
 	}
 
 	Vec2 playerScreenPos = mBoard.GetScreenPosFromGridPos(mPlayer.GetDoubleGridPos());
-	mPlayer.Draw(playerScreenPos);
+	bool isPlayerOnNumberCell = mBoard.GetIsNumberCell(mPlayer.GetGridPos());
+	mPlayer.Draw(playerScreenPos, isPlayerOnNumberCell);
 
 	for (int32 i = 0; i < mLife; ++i) TextureAsset(U"Life").scaled(0.3).draw(630 + i * 40, -390);
 
